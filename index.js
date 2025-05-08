@@ -1,8 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path')
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
-const { token } = require('./config.json');
-
+const { token, mongodb_uri } = require('./config.json');
+const mongoose = require('mongoose');
+const { notif } = require('./utils/notif.js');
+const User = require('./models/User.js')
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.commands = new Collection();
@@ -34,7 +36,7 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
         console.error(error);
         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true },)
+            await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true })
         } else {
             await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true })
         }
@@ -43,8 +45,35 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 
+(async () => {
+    try {
+        mongoose.set('strictQuery', false);
+        await mongoose.connect(mongodb_uri);
+        console.log('Connected to Database.');
+
+    }
+    catch (error) {
+        console.log(`Error: ${error}`);
+    }
+
+})();
+
 client.once(Events.ClientReady, c => {
     console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
 client.login(token);
+
+
+setInterval(async () => {
+    try {
+        const cursor = User.find({}).cursor();
+        for await (const userdata of cursor) {
+            notif(client, userdata)
+        }
+
+
+    } catch (error) {
+        console.error("Error in notif function:", error);
+    }
+}, 120000);

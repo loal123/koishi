@@ -127,7 +127,7 @@ module.exports = {
                 { name: 'Your Current Score', value: `${userscore}`, inline: false },
             )
 
-            .setImage('https://i.imgur.com/AfFp7pu.png')
+
             .setTimestamp()
             .setFooter({ text: 'Some footer text here', iconURL: 'https://tetr.io/res/achievements/frames/diamond.png' });
 
